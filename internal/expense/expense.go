@@ -6,6 +6,7 @@ import (
 
 type Expense struct {
 	Id        int64
+	UserId    int64
 	Category  string
 	Amount    float64
 	Comment   string

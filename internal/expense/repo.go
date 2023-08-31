@@ -33,10 +33,10 @@ func (r *Repo) AddExpense(
 	e Expense,
 ) error {
 	sql := `
-		INSERT INTO expense	(category, amount, comment)
-		VALUES ($1, $2, $3)
+		INSERT INTO expense	(user_id, category, amount, comment)
+		VALUES ($1, $2, $3, $4)
 		`
-	_, err := r.conn.Exec(ctx, sql, e.Category, e.Amount, e.Comment)
+	_, err := r.conn.Exec(ctx, sql, e.UserId, e.Category, e.Amount, e.Comment)
 	if err != nil {
 		return fmt.Errorf("error adding expense: %v", err)
 	}
@@ -49,7 +49,7 @@ func (r *Repo) GetExpenses(
 	filter Filter,
 ) ([]Expense, error) {
 	sql := `
-		SELECT id, category, amount, comment, created_at
+		SELECT id, user_id, category, amount, comment, created_at
 		FROM expense
 		WHERE 1=1
 		%s
@@ -89,6 +89,7 @@ func (r *Repo) GetExpenses(
 		var e Expense
 		err := rows.Scan(
 			&e.Id,
+			&e.UserId,
 			&e.Category,
 			&e.Amount,
 			&e.Comment,
