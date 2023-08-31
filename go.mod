@@ -3,6 +3,7 @@ module go-telexpenses
 go 1.20
 
 require (
+	github.com/caarlos0/env/v9 v9.0.0
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/jackc/pgx/v4 v4.18.1
 )
