@@ -6,8 +6,7 @@ MIGRATE := docker run --rm -v $(shell pwd)/migrations:/migrations --network host
 MIGRATE_CREATE := docker run --rm -v $(shell pwd)/migrations:/migrations --network host --user $(shell id -u):$(shell id -g) migrate/migrate create --seq -ext sql -dir /migrations/
 
 .PHONY: run
-run: ## run the application using air
-	echo $TELEGRAM_APITOKEN
+run: ## run the application locally using air
 	air
 
 .PHONY: db-start
