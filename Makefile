@@ -9,6 +9,10 @@ MIGRATE_CREATE := docker run --rm -v $(shell pwd)/migrations:/migrations --netwo
 run: ## run the application locally using air
 	air
 
+.PHONY: build
+build:
+	CGO_ENABLED=0 go build -ldflags='-w -s -extldflags "-static"' -o ./bin/go-telexpenses main.go
+
 .PHONY: db-start
 db-start: ## start the database
 	@mkdir -p testdata/postgres
