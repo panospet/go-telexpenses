@@ -32,11 +32,15 @@ func (r *Repo) AddExpense(
 	ctx context.Context,
 	e Expense,
 ) error {
+	if e.CreatedAt.IsZero() {
+		e.CreatedAt = time.Now()
+	}
+
 	sql := `
-		INSERT INTO expense	(user_id, category, amount, comment)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO expense	(user_id, category, amount, comment, created_at)
+		VALUES ($1, $2, $3, $4, $5)
 		`
-	_, err := r.conn.Exec(ctx, sql, e.UserId, e.Category, e.Amount, e.Comment)
+	_, err := r.conn.Exec(ctx, sql, e.UserId, e.Category, e.Amount, e.Comment, e.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("error adding expense: %v", err)
 	}
@@ -48,13 +52,6 @@ func (r *Repo) GetExpenses(
 	ctx context.Context,
 	filter Filter,
 ) ([]Expense, error) {
-	sql := `
-		SELECT id, user_id, category, amount, comment, created_at
-		FROM expense
-		WHERE 1=1
-		%s
-		ORDER BY created_at DESC
-		`
 	var args []interface{}
 	var where string
 	if filter.Year != 0 {
@@ -73,6 +70,15 @@ func (r *Repo) GetExpenses(
 		args = append(args, filter.Date)
 		where += fmt.Sprintf(" AND created_at::date = $%d ", len(args))
 	}
+
+	sql := fmt.Sprintf(`
+		SELECT id, user_id, category, amount, comment, created_at
+		FROM expense
+		WHERE 1=1
+		%s
+		ORDER BY created_at DESC
+		`, where,
+	)
 
 	rows, err := r.conn.Query(
 		ctx,
