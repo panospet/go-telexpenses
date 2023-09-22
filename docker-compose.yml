@@ -1,0 +1,22 @@
+services:
+  postgres:
+    container_name: go-telexpenses-postgres
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: expensesdb
+    volumes:
+    - ./docker-testdata/postgres:/var/lib/postgresql/data
+    ports:
+    - "5432:5432"
+    restart: unless-stopped
+  api:
+    container_name: go-telexpenses
+    image: p4nospet/go-telexpenses:latest
+    environment:
+      POSTGRES_DSN: "postgresql://postgres:5432/expensesdb?user=${POSTGRES_USER}&password=${POSTGRES_PASSWORD}&sslmode=disable"
+      MIGRATIONS_DIR: /root/migrations
+      TELEGRAM_APITOKEN: ${TELEGRAM_APITOKEN}
+    depends_on:
+    - postgres
