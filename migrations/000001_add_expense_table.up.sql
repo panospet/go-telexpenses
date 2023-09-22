@@ -2,7 +2,7 @@ create table expense (
     id serial primary key,
     user_id int not null,
     category varchar(200) not null,
-    amount float not null,
+    amount decimal not null,
     comment text not null,
     created_at timestamp not null default now()
 );
