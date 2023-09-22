@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"log/slog"
@@ -12,8 +14,12 @@ import (
 	"github.com/agnivade/levenshtein"
 	"github.com/caarlos0/env/v9"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/gosimple/slug"
 	"github.com/jackc/pgx/v4/pgxpool"
+	_ "github.com/lib/pq"
 
 	"go-telexpenses/internal/expense"
 )
@@ -64,6 +70,7 @@ var categoryKeyboard = tgbotapi.NewReplyKeyboard(
 type config struct {
 	TelegramToken string `env:"TELEGRAM_APITOKEN,required"`
 	PostgresDsn   string `env:"POSTGRES_DSN,required"`
+	MigrationsDir string `env:"MIGRATIONS_DIR" envDefault:"./migrations"`
 }
 
 type Ongoing struct {
@@ -93,6 +100,9 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// wait for postgres to be ready
+	time.Sleep(2 * time.Second)
+
 	conn, err := pgxpool.Connect(ctx, cfg.PostgresDsn)
 	if err != nil {
 		log.Fatalf("error connecting to database: %v", err)
@@ -100,6 +110,10 @@ func main() {
 	defer conn.Close()
 	if err := conn.Ping(ctx); err != nil {
 		log.Fatalf("error pinging database: %v", err)
+	}
+	err = migrateDb(cfg)
+	if err != nil {
+		log.Fatalf("error migrating database: %v", err)
 	}
 
 	repo := expense.NewRepo(ctx, conn)
@@ -294,4 +308,28 @@ func sendSimpleMessage(chatId int64, message string) {
 	if _, err := bot.Send(msg); err != nil {
 		slog.Error("cannot send message", slog.String("error", err.Error()))
 	}
+}
+
+func migrateDb(config config) error {
+	pg, err := sql.Open("postgres", config.PostgresDsn)
+	if err != nil {
+		return fmt.Errorf("sql.Open error: %s", err)
+	}
+	defer pg.Close()
+	driver, err := postgres.WithInstance(pg, &postgres.Config{})
+	if err != nil {
+		return fmt.Errorf("cannot init go-migrate: %s", err)
+	}
+	m, err := migrate.NewWithDatabaseInstance("file://"+config.MigrationsDir, "postgres", driver)
+	if err != nil {
+		return fmt.Errorf("cannot create migrate.NewWithDatabaseInstance: %s", err)
+	}
+	err = m.Up()
+	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return fmt.Errorf("cannot migrate up: %s", err)
+	}
+
+	log.Println("all database migrations are complete")
+
+	return nil
 }
