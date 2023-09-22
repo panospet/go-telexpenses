@@ -1,13 +1,6 @@
 #!make
-include .env
-export $(shell sed 's/=.*//' .env)
-
 MIGRATE := docker run --rm -v $(shell pwd)/migrations:/migrations --network host --user $(id -u):$(id -g) migrate/migrate -path=/migrations/ -database 'postgres://127.0.0.1:5433/expenses?sslmode=disable&user=admin&password=password'
 MIGRATE_CREATE := docker run --rm -v $(shell pwd)/migrations:/migrations --network host --user $(shell id -u):$(shell id -g) migrate/migrate create --seq -ext sql -dir /migrations/
-
-.PHONY: run
-run: ## run the application locally using air
-	air
 
 .PHONY: build
 build:
