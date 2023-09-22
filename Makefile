@@ -13,6 +13,10 @@ run: ## run the application locally using air
 build:
 	CGO_ENABLED=0 go build -ldflags='-w -s -extldflags "-static"' -o ./bin/go-telexpenses main.go
 
+.PHONY: container
+container: ## create docker container
+	docker build -t p4nospet/go-telexpenses .
+
 .PHONY: db-start
 db-start: ## start the database
 	@mkdir -p testdata/postgres
