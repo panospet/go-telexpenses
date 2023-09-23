@@ -71,7 +71,7 @@ func (r *Repo) GetExpenses(
 	}
 
 	sql := fmt.Sprintf(`
-		SELECT id, user_id, category, amount, comment, created_at
+		SELECT id, user, category, amount, comment, created_at
 		FROM expense
 		WHERE 1=1
 		%s
