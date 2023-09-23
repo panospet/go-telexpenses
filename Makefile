@@ -2,6 +2,10 @@
 MIGRATE := docker run --rm -v $(shell pwd)/migrations:/migrations --network host --user $(id -u):$(id -g) migrate/migrate -path=/migrations/ -database 'postgres://127.0.0.1:5433/expenses?sslmode=disable&user=admin&password=password'
 MIGRATE_CREATE := docker run --rm -v $(shell pwd)/migrations:/migrations --network host --user $(shell id -u):$(shell id -g) migrate/migrate create --seq -ext sql -dir /migrations/
 
+.PHONY: run
+run:
+	go run main.go
+
 .PHONY: build
 build:
 	CGO_ENABLED=0 go build -ldflags='-w -s -extldflags "-static"' -o ./bin/go-telexpenses main.go
