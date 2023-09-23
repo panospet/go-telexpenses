@@ -218,7 +218,7 @@ func main() {
 					sendSimpleMessage(update.Message.Chat.ID, "Δεν μπορώ να καταλάβω πόσα ξόδεψες. Πες μου ξανά.")
 					continue
 				}
-				sendSimpleMessage(update.Message.Chat.ID, "Έχεις κάποιο σχόλιο;")
+				sendSimpleMessage(update.Message.Chat.ID, "Δώσε μου και ένα σχόλιο")
 				ongoing.State = "user_was_asked_comment"
 
 			case "user_was_asked_comment":
