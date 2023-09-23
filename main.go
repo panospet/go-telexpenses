@@ -170,7 +170,7 @@ func main() {
 					continue
 				}
 
-				prettyPrintExpenses(update.Message.Chat.ID, expenses)
+				prettyPrintByCategory(update.Message.Chat.ID, expenses)
 				continue
 
 			case "month_specific":
@@ -181,6 +181,14 @@ func main() {
 				}
 				continue
 
+			case "category_details":
+				sendSimpleMessage(update.Message.Chat.ID, "γράψε τον χρόνο, τον μήνα και την κατηγορία (π.χ. 2021 5 Ψιλικά)")
+				ongoing = &Ongoing{
+					User:  update.Message.From.String(),
+					State: "user_was_asked_for_category_analysis",
+				}
+				continue
+
 			default:
 				msg := tgbotapi.NewMessage(
 					update.Message.Chat.ID,
@@ -188,7 +196,8 @@ func main() {
 						"Μπορείς όμως να κάνεις τα εξής: \n"+
 						"- `/new` για να δηλώσεις ένα καινούριο έξοδο \n"+
 						"- `/month` για να δεις τι έχεις ξοδέψει σύνολο αυτόν τον μήνα \n"+
-						"- `/month_specific` για να δεις τι έχεις ξοδέψει βάσει χρόνου, μήνα και κατηγορίας \n",
+						"- `/month_specific` για να δεις τι έχεις ξοδέψει βάσει χρόνου, μήνα και κατηγορίας \n"+
+						"- `/category_details` για να δεις αναλυτικά τα έξοδα μιας κατηγορίας βάσει χρόνου και μήνα \n",
 				)
 				msg.ParseMode = tgbotapi.ModeMarkdown
 				if _, err := bot.Send(msg); err != nil {
@@ -271,7 +280,46 @@ func main() {
 					continue
 				}
 
-				prettyPrintExpenses(update.Message.Chat.ID, expenses)
+				prettyPrintByCategory(update.Message.Chat.ID, expenses)
+				continue
+
+			case "user_was_asked_for_category_analysis":
+				parts := strings.Split(update.Message.Text, " ")
+				var year, month int
+				var category string
+				var err error
+				year, err = strconv.Atoi(parts[0])
+				if err != nil {
+					sendSimpleMessage(update.Message.Chat.ID, "Δεν μπορώ να καταλάβω τον χρόνο. Πες μου ξανά.")
+					continue
+				}
+				if len(parts) > 1 {
+					month, err = strconv.Atoi(parts[1])
+					if err != nil {
+						sendSimpleMessage(update.Message.Chat.ID, "Δεν μπορώ να καταλάβω τον μήνα. Πες μου ξανά.")
+						continue
+					}
+				}
+				if len(parts) > 2 {
+					category = fuzzyMatchCategory(parts[2])
+					if category == "" {
+						sendSimpleMessage(update.Message.Chat.ID, "Η συγκεκριμένη κατηγορία δεν βρέθηκε. Πες την ξανά.")
+						continue
+					}
+				}
+
+				expenses, err := repo.GetExpenses(ctx, expense.Filter{
+					Year:     year,
+					Month:    month,
+					Category: category,
+				})
+				if err != nil {
+					slog.Error("cannot get expenses", slog.String("error", err.Error()))
+					sendSimpleMessage(update.Message.Chat.ID, "Κάτι πήγε λάθος. Προσπάθησε ξανά.")
+					continue
+				}
+
+				prettyPrintAnalysis(update.Message.Chat.ID, expenses)
 				continue
 			}
 		}
@@ -289,7 +337,20 @@ func fuzzyMatchCategory(category string) string {
 	return ""
 }
 
-func prettyPrintExpenses(chatId int64, expenses []expense.Expense) {
+func prettyPrintAnalysis(chatId int64, expenses []expense.Expense) {
+	if len(expenses) == 0 {
+		sendSimpleMessage(chatId, "Δεν βρήκα τίποτα.")
+		return
+	}
+	var msgText strings.Builder
+	msgText.WriteString(fmt.Sprintf("Έξοδα της κατηγορίας %s για τον μήνα αυτό: \n", expenses[0].Category))
+	for _, e := range expenses {
+		msgText.WriteString(fmt.Sprintf("- %.2f€ %s, %s\n", e.Amount, e.Comment, e.CreatedAt.Format("02 Jan 06")))
+	}
+	sendSimpleMessage(chatId, msgText.String())
+}
+
+func prettyPrintByCategory(chatId int64, expenses []expense.Expense) {
 	if len(expenses) == 0 {
 		sendSimpleMessage(chatId, "Δεν βρήκα τίποτα.")
 		return
