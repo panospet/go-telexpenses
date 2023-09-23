@@ -74,7 +74,7 @@ type config struct {
 }
 
 type Ongoing struct {
-	UserId   int64
+	User     string
 	State    string
 	Category string
 	Amount   float64
@@ -152,8 +152,8 @@ func main() {
 					slog.Warn("cannot send message", slog.String("error", err.Error()))
 				}
 				ongoing = &Ongoing{
-					UserId: update.Message.From.ID,
-					State:  "user_chose_category",
+					User:  update.Message.From.String(),
+					State: "user_chose_category",
 				}
 
 			case "month":
@@ -176,8 +176,8 @@ func main() {
 			case "month_specific":
 				sendSimpleMessage(update.Message.Chat.ID, "γράψε τον χρόνο, τον μήνα και την κατηγορία (π.χ. 2021 5 Ψιλικά)")
 				ongoing = &Ongoing{
-					UserId: update.Message.From.ID,
-					State:  "user_was_asked_for_specific_month",
+					User:  update.Message.From.String(),
+					State: "user_was_asked_for_specific_month",
 				}
 				continue
 
@@ -199,7 +199,7 @@ func main() {
 			continue
 		}
 
-		if ongoing != nil && update.Message.From.ID != ongoing.UserId {
+		if ongoing != nil && update.Message.From.String() != ongoing.User {
 			sendSimpleMessage(update.Message.Chat.ID, "Εσένα δεν σου μιλάω (ακόμα)")
 			continue
 		}
@@ -213,20 +213,18 @@ func main() {
 
 			case "user_was_asked_amount":
 				floatStr := strings.Replace(update.Message.Text, ",", ".", -1)
-				log.Printf("floatStr: %s", floatStr)
-				ongoing.Amount, err = strconv.ParseFloat(floatStr, 32)
+				ongoing.Amount, err = strconv.ParseFloat(floatStr, 64)
 				if err != nil {
 					sendSimpleMessage(update.Message.Chat.ID, "Δεν μπορώ να καταλάβω πόσα ξόδεψες. Πες μου ξανά.")
 					continue
 				}
-				log.Printf("float amount: %f", ongoing.Amount)
 				sendSimpleMessage(update.Message.Chat.ID, "Δώσε μου και ένα σχόλιο")
 				ongoing.State = "user_was_asked_comment"
 
 			case "user_was_asked_comment":
 				ongoing.Comment = update.Message.Text
 				err := repo.AddExpense(ctx, expense.Expense{
-					UserId:   ongoing.UserId,
+					User:     ongoing.User,
 					Category: ongoing.Category,
 					Amount:   ongoing.Amount,
 					Comment:  ongoing.Comment,

@@ -2,9 +2,7 @@ package expense
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -37,14 +35,11 @@ func (r *Repo) AddExpense(
 	if e.CreatedAt.IsZero() {
 		e.CreatedAt = time.Now()
 	}
-	jj, _ := json.MarshalIndent(e, "", "  ")
-	log.Println(string(jj))
-
 	sql := `
-		INSERT INTO expense	(user_id, category, amount, comment, created_at)
+		INSERT INTO expense	(user, category, amount, comment, created_at)
 		VALUES ($1, $2, $3, $4, $5)
 		`
-	_, err := r.conn.Exec(ctx, sql, e.UserId, e.Category, e.Amount, e.Comment, e.CreatedAt)
+	_, err := r.conn.Exec(ctx, sql, e.User, e.Category, e.Amount, e.Comment, e.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("error adding expense: %v", err)
 	}
@@ -99,7 +94,7 @@ func (r *Repo) GetExpenses(
 		var e Expense
 		err := rows.Scan(
 			&e.Id,
-			&e.UserId,
+			&e.User,
 			&e.Category,
 			&e.Amount,
 			&e.Comment,
