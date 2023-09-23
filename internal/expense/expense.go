@@ -15,8 +15,11 @@ type Expense struct {
 
 func SumExpensesByCategory(expenses []Expense) map[string]float64 {
 	sums := make(map[string]float64)
+	total := float64(0)
 	for _, e := range expenses {
 		sums[e.Category] += e.Amount
+		total += e.Amount
 	}
+	sums["Σύνολο"] = total
 	return sums
 }
