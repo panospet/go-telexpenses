@@ -36,7 +36,7 @@ func (r *Repo) AddExpense(
 		e.CreatedAt = time.Now()
 	}
 	sql := `
-		INSERT INTO expense	(user, category, amount, comment, created_at)
+		INSERT INTO expense	(user_str, category, amount, comment, created_at)
 		VALUES ($1, $2, $3, $4, $5)
 		`
 	_, err := r.conn.Exec(ctx, sql, e.User, e.Category, e.Amount, e.Comment, e.CreatedAt)
@@ -71,7 +71,7 @@ func (r *Repo) GetExpenses(
 	}
 
 	sql := fmt.Sprintf(`
-		SELECT id, user, category, amount, comment, created_at
+		SELECT id, user_str, category, amount, comment, created_at
 		FROM expense
 		WHERE 1=1
 		%s

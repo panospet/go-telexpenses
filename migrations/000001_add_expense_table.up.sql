@@ -1,6 +1,6 @@
 create table expense (
     id serial primary key,
-    user varchar(500) not null,
+    user_str varchar(500) not null,
     category varchar(200) not null,
     amount decimal not null,
     comment text not null,
