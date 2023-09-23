@@ -213,11 +213,13 @@ func main() {
 
 			case "user_was_asked_amount":
 				floatStr := strings.Replace(update.Message.Text, ",", ".", -1)
+				log.Printf("floatStr: %s", floatStr)
 				ongoing.Amount, err = strconv.ParseFloat(floatStr, 32)
 				if err != nil {
 					sendSimpleMessage(update.Message.Chat.ID, "Δεν μπορώ να καταλάβω πόσα ξόδεψες. Πες μου ξανά.")
 					continue
 				}
+				log.Printf("float amount: %f", ongoing.Amount)
 				sendSimpleMessage(update.Message.Chat.ID, "Δώσε μου και ένα σχόλιο")
 				ongoing.State = "user_was_asked_comment"
 

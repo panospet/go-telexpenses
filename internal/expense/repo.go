@@ -2,7 +2,9 @@ package expense
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -35,6 +37,8 @@ func (r *Repo) AddExpense(
 	if e.CreatedAt.IsZero() {
 		e.CreatedAt = time.Now()
 	}
+	jj, _ := json.MarshalIndent(e, "", "  ")
+	log.Println(string(jj))
 
 	sql := `
 		INSERT INTO expense	(user_id, category, amount, comment, created_at)
