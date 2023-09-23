@@ -8,6 +8,6 @@ create table expense (
 );
 
 create index expense_category_idx on expense (category);
-create index expense_user_id_idx on expense (user_id);
+create index expense_user_id_idx on expense (user_str);
 create index expense_created_at_idx on expense (created_at);
 create index expense_amount_idx on expense (amount);
