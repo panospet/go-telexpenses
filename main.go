@@ -213,7 +213,7 @@ func main() {
 
 			case "user_was_asked_amount":
 				floatStr := strings.Replace(update.Message.Text, ",", ".", -1)
-				ongoing.Amount, err = strconv.ParseFloat(floatStr, 64)
+				ongoing.Amount, err = strconv.ParseFloat(floatStr, 32)
 				if err != nil {
 					sendSimpleMessage(update.Message.Chat.ID, "Δεν μπορώ να καταλάβω πόσα ξόδεψες. Πες μου ξανά.")
 					continue
