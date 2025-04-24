@@ -13,9 +13,10 @@ jobs:
       with:
         go-version: '1.21'
 
-    - name: Login to Docker Hub
+    - name: Login to registry
       uses: docker/login-action@v2
       with:
+        registry: registry.panos.pet
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 

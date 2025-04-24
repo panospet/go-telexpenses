@@ -13,7 +13,7 @@ services:
     restart: unless-stopped
   api:
     container_name: go-telexpenses
-    image: p4nospet/go-telexpenses:latest
+    image: registry.panos.pet/go-telexpenses:latest
     environment:
       POSTGRES_DSN: "postgresql://postgres:5432/expensesdb?user=${POSTGRES_USER}&password=${POSTGRES_PASSWORD}&sslmode=disable"
       MIGRATIONS_DIR: /root/migrations

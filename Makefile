@@ -12,7 +12,11 @@ build:
 
 .PHONY: container
 container: ## create docker container
-	docker build -t p4nospet/go-telexpenses .
+	docker build -t registry.panos.pet/go-telexpenses .
+
+.PHONY: container-push
+container-push: ## push docker image to registry
+	docker push registry.panos.pet/go-telexpenses
 
 .PHONY: db-start
 db-start: ## start the database
